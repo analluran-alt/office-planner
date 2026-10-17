@@ -3,6 +3,8 @@ on:
   schedule:
     - cron: "17 */3 * * *"   # every 3 hours (UTC)
   workflow_dispatch: {}
+  push:
+    paths: ["routes.json", "build_routes.py", "fetch_forecast.py"]
 permissions:
   contents: write
 jobs:
@@ -13,12 +15,15 @@ jobs:
       - uses: actions/setup-python@v5
         with:
           python-version: "3.12"
+      - name: Build scan points along the real route (OSRM), only when routes changed
+        run: python build_routes.py routes.json
       - name: Fetch Open-Meteo for all waypoints
         run: python fetch_forecast.py routes.json data.json
-      - name: Commit data.json
+      - name: Commit
         run: |
           git config user.name "forecast-bot"
           git config user.email "forecast-bot@users.noreply.github.com"
-          git add data.json
+          git add data.json routes.json
           git commit -m "forecast $(date -u +%Y-%m-%dT%H:%MZ)" || echo "no change"
+          git pull --rebase
           git push

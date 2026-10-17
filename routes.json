@@ -61,7 +61,19 @@
           "min": 75
         }
       ],
-      "nsShort": "NS 08:20→09:19"
+      "nsShort": "NS 08:20→09:19",
+      "auto": true,
+      "from": {
+        "name": "'s-Hertogenbosch",
+        "lat": 51.6978,
+        "lon": 5.3037
+      },
+      "to": {
+        "name": "Amersfoort Vathorst",
+        "lat": 52.193,
+        "lon": 5.425
+      },
+      "scanEveryMin": 10
     },
     {
       "id": "eindhoven",
@@ -102,7 +114,19 @@
           "min": 40
         }
       ],
-      "nsShort": "NS IC ~20 min"
+      "nsShort": "NS IC ~20 min",
+      "auto": true,
+      "from": {
+        "name": "'s-Hertogenbosch",
+        "lat": 51.6978,
+        "lon": 5.3037
+      },
+      "to": {
+        "name": "Eindhoven",
+        "lat": 51.4416,
+        "lon": 5.4697
+      },
+      "scanEveryMin": 10
     }
   ]
 }

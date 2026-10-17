@@ -2,7 +2,7 @@
 <title>Office Week Planner</title>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Chakra+Petch:wght@500;600;700&family=Manrope:wght@400;500;600;700&display=swap">
 <style>
-/* Layout: one screen. Compact header (route tabs + forecast lamp), a one-line week verdict, then five compact day cards in a row (stack on phone). Each card: verdict, leave/return times, limiting factor, waypoint dots. Tap a card to expand its departure strips. Dark-first instrument panel. */
+/* Layout: one screen. Compact header (route tabs + forecast lamp), a one-line week verdict, then the five days as a vertical deck of cards. Each card is one row: day + verdict | leave home | leave office | scan bars out/back | worst values. Tap a card to expand departure strips and the point table. Dark-first instrument panel. */
 :root {
   --bg: #0e1116; --bg2: #151a22; --fg: #eef1f5; --muted: #8e97a6;
   --card: #1a2029; --card-hi: #232b37; --line: #2b3441; --glass: rgba(255,255,255,.05);
@@ -78,9 +78,13 @@ button:focus-visible, .tab:focus-visible, .day:focus-visible { outline: 2px soli
 .verdict .n { color: var(--muted); font-size: 12px; }
 
 /* day cards */
-.week { display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); gap: 10px; perspective: 1400px; }
-@media (max-width: 1000px) { .week { grid-template-columns: repeat(auto-fit, minmax(210px, 1fr)); } }
-.day { position: relative; min-width: 0; border-radius: 14px; padding: 12px 12px 12px; background: linear-gradient(170deg, var(--card-hi), var(--card)); border: 1px solid var(--line); box-shadow: var(--shadow); transform-style: preserve-3d; transition: transform .15s ease-out, box-shadow .2s; display: grid; gap: 8px; align-content: start; cursor: pointer; }
+.week { display: grid; grid-template-columns: 1fr; gap: 10px; perspective: 1400px; }
+.day { position: relative; min-width: 0; border-radius: 14px; padding: 12px 14px; background: linear-gradient(170deg, var(--card-hi), var(--card)); border: 1px solid var(--line); box-shadow: var(--shadow); transform-style: preserve-3d; transition: transform .15s ease-out, box-shadow .2s; display: grid; gap: 8px; cursor: pointer; }
+.row { display: grid; grid-template-columns: 150px 1fr 1fr minmax(140px, 1.2fr) minmax(170px, 1fr); gap: 12px; align-items: center; }
+@media (max-width: 900px) { .row { grid-template-columns: 1fr 1fr; } .row .head { grid-column: 1 / -1; } .row .scan { grid-column: 1 / -1; } .row .kv { grid-column: 1 / -1; } }
+.scan { display: grid; gap: 4px; min-width: 0; }
+.tm.bad .t { color: var(--stop); }
+.tm .t small { font: 600 10px var(--body); color: var(--muted); margin-left: 4px; }
 .day::before { content: ""; position: absolute; left: 12px; right: 12px; top: 0; height: 3px; border-radius: 0 0 4px 4px; background: var(--line); }
 .day.go::before { background: var(--go); box-shadow: 0 0 14px var(--go-glow); }
 .day.stop::before { background: var(--stop); box-shadow: 0 0 14px var(--stop-glow); }
@@ -93,19 +97,19 @@ button:focus-visible, .tab:focus-visible, .day:focus-visible { outline: 2px soli
 .pill { font: 600 10px var(--body); letter-spacing: .06em; text-transform: uppercase; white-space: nowrap; padding: 5px 8px; border-radius: 999px; color: var(--fg); background: var(--bg2); border: 1px solid var(--line); box-shadow: 0 2px 0 var(--line), 0 1px 0 rgba(255,255,255,.08) inset; transform: translateZ(14px); }
 .pill.go { color: #04150c; background: var(--go); border-color: transparent; box-shadow: 0 3px 0 color-mix(in srgb, var(--go) 60%, #000), 0 10px 20px -10px var(--go-glow); }
 .pill.stop { color: #fff; background: var(--stop); border-color: transparent; box-shadow: 0 3px 0 color-mix(in srgb, var(--stop) 60%, #000), 0 10px 20px -10px var(--stop-glow); }
-.times { display: grid; grid-template-columns: 1fr 1fr; gap: 6px; }
+
 .tm { background: var(--bg2); border: 1px solid var(--line); border-radius: 10px; padding: 7px 9px; min-width: 0; box-shadow: 0 2px 6px rgba(0,0,0,.25) inset; transform: translateZ(6px); }
 .tm .lab { font-size: 9px; letter-spacing: .1em; text-transform: uppercase; color: var(--muted); }
 .tm .t { font: 700 20px/1.1 var(--display); font-variant-numeric: tabular-nums; }
 .tm .d { font-size: 11px; color: var(--muted); }
 .tm.shift .t { color: var(--warn); }
-.tm.stop .t { color: var(--stop); font-size: 16px; }
+
 .dots { display: flex; align-items: center; gap: 3px; }
 .dots i { flex: 1; height: 6px; border-radius: 3px; background: var(--line); }
 .dots i.go { background: var(--go); } .dots i.stop { background: var(--stop); }
 .dots i.none { background-image: repeating-linear-gradient(135deg, transparent 0 2px, rgba(0,0,0,.25) 2px 4px); }
 .dots small { font-size: 9px; color: var(--muted); letter-spacing: .06em; text-transform: uppercase; }
-.kv { display: grid; grid-template-columns: repeat(4, 1fr); gap: 4px; font-size: 10px; color: var(--muted); }
+.kv { display: grid; grid-template-columns: repeat(4, 1fr); gap: 4px; font-size: 10px; color: var(--muted); min-width: 0; }
 .kv b { display: block; color: var(--fg); font: 600 13px/1.1 var(--display); font-variant-numeric: tabular-nums; }
 .kv .bad b { color: var(--stop); }
 .why { font-size: 12px; color: var(--muted); margin: 0; }
@@ -289,37 +293,38 @@ function render() {
     const normalM = morningSlots()[0];
     const m = ev.s === "go" ? ev.morning : normalM, e = ev.s === "go" ? ev.evening : null;
     const normalE = eveningSlots(m)[0];
-    const ex = past ? null : extremes(d.date, m, e);
-    const out = past ? [] : scan(d.date, m, "out"), back = (!past && e !== null) ? scan(d.date, e, "back") : [];
+    const ex = past ? null : extremes(d.date, m, e !== null ? e : normalE);
+    
     const box = document.createElement("div");
     box.className = "day " + ev.s + (isChosen ? " chosen" : "") + (past ? " past" : "") + (OPEN.has(d.date) ? " open" : "");
     box.tabIndex = 0;
+    const mSt = past ? null : rideStatus(d.date, m, "out");
+    const eAt = e !== null ? e : normalE, eSt = past ? null : rideStatus(d.date, eAt, "back");
+    const tile = (lab, t, st, shifted, sub) => '<div class="tm' + (st && st.s === "stop" ? ' bad' : shifted ? ' shift' : '') + '"><div class="lab">' + lab + '</div><div class="t">' + hhmm(t) + (st ? '<small>' + (st.s === "go" ? "clean" : st.s === "stop" ? "blocked" : "no data") + '</small>' : '') + '</div><div class="d">' + sub + '</div></div>';
+    const dots = (lab, sc) => '<div class="dots"><small>' + lab + '</small>' + sc.map(x => '<i class="' + x.st.s + '" title="' + esc(x.w.name) + ' ' + hhmm(x.t) + (x.st.fails.length ? ': ' + esc(x.st.fails.join(', ')) : '') + '"></i>').join("") + '</div>';
     box.innerHTML =
-      '<div class="head"><div><div class="dow">' + d.name.slice(0, 3) + ' <span class="date">' + d.short + '</span></div>' + (isChosen ? '<div class="office">Office day ' + (chosen.indexOf(d) + 1) + '</div>' : '<div class="date">&nbsp;</div>') + '</div><span class="pill ' + ev.s + '">' + ev.t + '</span></div>' +
-      (past ? '<p class="why">Past</p>' :
-        '<div class="times">' +
-          (ev.s === "go"
-            ? '<div class="tm' + (m !== normalM ? ' shift' : '') + '"><div class="lab">Leave home</div><div class="t">' + hhmm(m) + '</div><div class="d">' + (m !== normalM ? (normalM - m) + ' min earlier' : 'arrive ' + hhmm(m + ROUTE.rideMinutes)) + '</div></div>' +
-              '<div class="tm' + (e !== normalE ? ' shift' : '') + '"><div class="lab">Leave office</div><div class="t">' + hhmm(e) + '</div><div class="d">' + (e !== normalE ? '+' + (e - normalE) + ' min later' : 'home ' + hhmm(e + ROUTE.rideMinutes)) + '</div></div>'
-            : ev.s === "stop"
-            ? '<div class="tm stop"><div class="lab">By train</div><div class="t">' + esc(ROUTE.nsShort || "NS") + '</div><div class="d">arrive before ' + CFG.arriveBy + '</div></div><div class="tm"><div class="lab">Blocked by</div><div class="d" style="color:var(--fg)">' + esc(ev.why) + '</div></div>'
-            : '<div class="tm" style="grid-column:1/-1"><div class="d">' + esc(ev.why) + '</div></div>') +
-        '</div>' +
-        '<div class="dots" title="Scan points, morning ride at ' + hhmm(m) + '"><small>Out</small>' + out.map(x => '<i class="' + x.st.s + '" title="' + esc(x.w.name) + ' ' + hhmm(x.t) + '"></i>').join("") + '</div>' +
-        (back.length ? '<div class="dots" title="Scan points, evening ride at ' + hhmm(e) + '"><small>Back</small>' + back.map(x => '<i class="' + x.st.s + '" title="' + esc(x.w.name) + ' ' + hhmm(x.t) + '"></i>').join("") + '</div>' : '') +
-        (ex ? '<div class="kv"><span class="' + (ex[0] > R.rainMaxMm ? 'bad' : '') + '">Rain<b>' + (has(ex[0]) ? ex[0] : '–') + '</b></span><span class="' + (ex[1] > R.windMaxKmh ? 'bad' : '') + '">Wind<b>' + (has(ex[1]) ? ex[1] : '–') + '</b></span><span class="' + (ex[2] > R.gustMaxKmh ? 'bad' : '') + '">Gust<b>' + (has(ex[2]) ? ex[2] : '–') + '</b></span><span class="' + (has(ex[3]) && ex[3] <= R.tempMinC ? 'bad' : '') + '">Min °C<b>' + (has(ex[3]) ? ex[3] : '–') + '</b></span></div>' : '') +
-        '<span class="more">' + (OPEN.has(d.date) ? 'Hide details' : 'Details') + '</span>' +
+      '<div class="row">' +
+        '<div class="head"><div><div class="dow">' + d.name.slice(0, 3) + ' <span class="date">' + d.short + '</span></div>' + (isChosen ? '<div class="office">Office day ' + (chosen.indexOf(d) + 1) + '</div>' : '') + '</div><span class="pill ' + ev.s + '">' + ev.t + '</span></div>' +
+        (past ? '<p class="why" style="grid-column:2/-1">Past</p>' :
+          tile("Leave home", m, mSt, m !== normalM, mSt.s === "stop" ? esc(mSt.fails[0]) : (m !== normalM ? (normalM - m) + " min earlier" : "arrive " + hhmm(m + ROUTE.rideMinutes))) +
+          tile("Leave office", eAt, eSt, e !== null && e !== normalE, eSt.s === "stop" ? esc(eSt.fails[0]) : (e !== null && e !== normalE ? "+" + (e - normalE) + " min later" : "home " + hhmm(eAt + ROUTE.rideMinutes))) +
+          '<div class="scan">' + dots("Out", scan(d.date, m, "out")) + dots("Back", scan(d.date, eAt, "back")) + '</div>' +
+          (ex ? '<div class="kv"><span class="' + (ex[0] > R.rainMaxMm ? 'bad' : '') + '">Rain<b>' + (has(ex[0]) ? ex[0] : '–') + '</b></span><span class="' + (ex[1] > R.windMaxKmh ? 'bad' : '') + '">Wind<b>' + (has(ex[1]) ? ex[1] : '–') + '</b></span><span class="' + (ex[2] > R.gustMaxKmh ? 'bad' : '') + '">Gust<b>' + (has(ex[2]) ? ex[2] : '–') + '</b></span><span class="' + (has(ex[3]) && ex[3] <= R.tempMinC ? 'bad' : '') + '">Min °C<b>' + (has(ex[3]) ? ex[3] : '–') + '</b></span></div>' : '<div></div>')) +
+      '</div>' +
+      (past ? '' :
+        (ev.s === "stop" ? '<div class="nsline"><b>Train:</b> ' + esc(ROUTE.ns) + '</div>' : '') +
+        '<span class="more">' + (OPEN.has(d.date) ? 'Hide details' : 'Details: all departure options and point-by-point values') + '</span>' +
         '<div class="detail">' +
           stripHTML("Leave home", morningSlots().slice().reverse(), t => rideStatus(d.date, t, "out"), ev.morning) +
           stripHTML("Leave office", eveAll, t => rideStatus(d.date, t, "back"), ev.evening) +
-          '<table class="wpt"><tbody>' + out.map(x => '<tr class="' + x.st.s + '"><td>' + esc(x.w.name) + '</td><td>' + hhmm(x.t) + '</td><td>' + fmtV(x.v, 0) + '</td><td>' + fmtV(x.v, 1) + '</td><td>' + fmtV(x.v, 2) + '</td><td>' + fmtV(x.v, 3) + '</td></tr>').join("") + '</tbody></table>' +
-          (ev.s === "stop" ? '<div class="nsline"><b>NS:</b> ' + esc(ROUTE.ns) + '</div>' : '') +
+          '<table class="wpt"><tbody><tr><td colspan="6" style="color:var(--muted);border:0">Morning ride ' + hhmm(m) + '</td></tr>' + scan(d.date, m, "out").map(x => '<tr class="' + x.st.s + '"><td>' + esc(x.w.name) + '</td><td>' + hhmm(x.t) + '</td><td>' + fmtV(x.v, 0) + '</td><td>' + fmtV(x.v, 1) + '</td><td>' + fmtV(x.v, 2) + '</td><td>' + fmtV(x.v, 3) + '</td></tr>').join("") +
+          '<tr><td colspan="6" style="color:var(--muted)">Evening ride ' + hhmm(eAt) + '</td></tr>' + scan(d.date, eAt, "back").map(x => '<tr class="' + x.st.s + '"><td>' + esc(x.w.name) + '</td><td>' + hhmm(x.t) + '</td><td>' + fmtV(x.v, 0) + '</td><td>' + fmtV(x.v, 1) + '</td><td>' + fmtV(x.v, 2) + '</td><td>' + fmtV(x.v, 3) + '</td></tr>').join("") + '</tbody></table>' +
         '</div>');
     box.addEventListener("click", ev2 => { if (ev2.target.closest(".detail")) return; OPEN.has(d.date) ? OPEN.delete(d.date) : OPEN.add(d.date); render(); });
     box.addEventListener("keydown", ev2 => { if (ev2.key === "Enter" || ev2.key === " ") { ev2.preventDefault(); box.click(); } });
     wk.appendChild(box);
   });
-  document.getElementById("foot").textContent = "Worst values along the recommended rides (train days: the normal 08:00 ride). Colored bars: scan points in route order. Tap a card for departure options and the point-by-point table.";
+  document.getElementById("foot").textContent = "Each card: both rides at the recommended time (train days: the normal times, so you see what blocks them). Bars: scan points in route order, out and back. Worst values along both rides. Tap a card for all departure options.";
   attachTilt();
 }
 const fine = matchMedia("(pointer: fine)").matches && !matchMedia("(prefers-reduced-motion: reduce)").matches;
