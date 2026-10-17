@@ -1,0 +1,26 @@
+# Office Week Planner
+
+Picks the two office days per week for a motorbike commute from 's-Hertogenbosch, by scanning the
+forecast along the route at the time each point is passed (moving scan). Wet, windy or freezing
+rides fall back to the NS train.
+
+## Parts
+- `routes.json` — home, rules, shift length, arrival deadline and the routes with their waypoints
+  (`min` = minutes after departure when that point is passed). Edit this file to add a route.
+- `fetch_forecast.py` — fetches Open-Meteo (free, 15-minute resolution) for every waypoint and writes `data.json`.
+- `.github/workflows/forecast.yml` — GitHub Action: runs the script every 3 hours and commits `data.json`.
+- `data.json` — the forecast the page reads. Raw URL:
+  `https://raw.githubusercontent.com/analluran-alt/office-planner/main/data.json`
+- `web/index.html` — the planner page (same file as the Claude artifact; reads `routes.json` and `data.json` next to it).
+
+## Rules (routes.json)
+0 mm rain, wind ≤ 25 km/h, gusts ≤ 40 km/h, temperature > 0 °C at every waypoint at the moment of passing.
+Morning: leave 06:00 up to the latest departure that arrives before 09:15 (15-min steps), latest clean one wins.
+Evening: earliest departure is arrival + 8.5 h, latest 20:00, earliest clean one wins.
+Motorbike day = clean morning ride + matching clean evening ride; otherwise train day.
+
+## Data schema (data.json)
+```
+{ "generated": ISO, "source": str, "stepMinutes": 15,
+  "points": { "lat,lon": { "YYYY-MM-DD": { "HH:MM": [rain_mm, wind_kmh, gust_kmh, temp_c] } } } }
+```

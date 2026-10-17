@@ -1,0 +1,24 @@
+name: Fetch forecast
+on:
+  schedule:
+    - cron: "17 */3 * * *"   # every 3 hours (UTC)
+  workflow_dispatch: {}
+permissions:
+  contents: write
+jobs:
+  fetch:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Fetch Open-Meteo for all waypoints
+        run: python fetch_forecast.py routes.json data.json
+      - name: Commit data.json
+        run: |
+          git config user.name "forecast-bot"
+          git config user.email "forecast-bot@users.noreply.github.com"
+          git add data.json
+          git commit -m "forecast $(date -u +%Y-%m-%dT%H:%MZ)" || echo "no change"
+          git push

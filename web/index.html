@@ -1,0 +1,361 @@
+<meta name="claude:viewport-fit-sides" content="cover">
+<title>Office Week Planner</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Chakra+Petch:wght@500;600;700&family=Manrope:wght@400;500;600;700&display=swap">
+<style>
+/* Layout: dashboard. Route tabs + status strip on top, two big "ride" tiles with leave times, then five 3D day cards, each with two departure strips (morning 06:00–08:00, evening 16:00–20:00) scanned waypoint by waypoint. Dark-first instrument panel, light variant. */
+:root {
+  --bg: #0e1116; --bg2: #151a22; --fg: #eef1f5; --muted: #8e97a6;
+  --card: #1a2029; --card-hi: #232b37; --line: #2b3441; --glass: rgba(255,255,255,.05);
+  --accent: #58b4ff; --accent-2: #a67cff;
+  --go: #39d98a; --go-glow: rgba(57,217,138,.35);
+  --stop: #ff6b5c; --stop-glow: rgba(255,107,92,.35);
+  --shadow: 0 1px 0 rgba(255,255,255,.04) inset, 0 20px 40px -20px rgba(0,0,0,.8), 0 8px 16px -8px rgba(0,0,0,.6);
+  --display: "Chakra Petch", "Trebuchet MS", sans-serif;
+  --body: "Manrope", system-ui, sans-serif;
+  color-scheme: dark;
+}
+@media (prefers-color-scheme: light) {
+  :root:not([data-theme="dark"]) {
+    --bg: #e9ecf1; --bg2: #f4f6f9; --fg: #141922; --muted: #5b6577;
+    --card: #ffffff; --card-hi: #f7f9fc; --line: #d5dbe5; --glass: rgba(255,255,255,.6);
+    --accent: #1f6fd0; --accent-2: #7a4fd6;
+    --go: #1f9d5e; --go-glow: rgba(31,157,94,.25);
+    --stop: #d1452f; --stop-glow: rgba(209,69,47,.25);
+    --shadow: 0 1px 0 rgba(255,255,255,.8) inset, 0 20px 40px -22px rgba(20,30,50,.35), 0 8px 16px -10px rgba(20,30,50,.25);
+    color-scheme: light;
+  }
+}
+:root[data-theme="light"] {
+  --bg: #e9ecf1; --bg2: #f4f6f9; --fg: #141922; --muted: #5b6577;
+  --card: #ffffff; --card-hi: #f7f9fc; --line: #d5dbe5; --glass: rgba(255,255,255,.6);
+  --accent: #1f6fd0; --accent-2: #7a4fd6;
+  --go: #1f9d5e; --go-glow: rgba(31,157,94,.25);
+  --stop: #d1452f; --stop-glow: rgba(209,69,47,.25);
+  --shadow: 0 1px 0 rgba(255,255,255,.8) inset, 0 20px 40px -22px rgba(20,30,50,.35), 0 8px 16px -10px rgba(20,30,50,.25);
+  color-scheme: light;
+}
+* { box-sizing: border-box; }
+body {
+  margin: 0; color: var(--fg); font: 15px/1.5 var(--body);
+  background: radial-gradient(1200px 600px at 80% -10%, color-mix(in srgb, var(--accent) 18%, transparent), transparent 60%),
+              radial-gradient(900px 500px at -10% 110%, color-mix(in srgb, var(--accent-2) 14%, transparent), transparent 60%), var(--bg);
+  padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px));
+  padding-block: 22px 40px; min-height: 100%;
+}
+.wrap { max-width: 1180px; margin: 0 auto; display: grid; gap: 22px; }
+header { display: flex; justify-content: space-between; align-items: flex-end; gap: 16px; flex-wrap: wrap; }
+h1 { font: 700 clamp(26px, 4vw, 38px)/1.05 var(--display); margin: 0; letter-spacing: .01em; text-wrap: balance; }
+h1 span { color: var(--accent); }
+.route { color: var(--muted); margin: 6px 0 0; font-size: 14px; }
+.route b { color: var(--fg); font-weight: 600; }
+.tabs { display: flex; gap: 8px; flex-wrap: wrap; }
+.tab { font: 600 13px var(--body); color: var(--muted); background: var(--card); border: 1px solid var(--line); border-radius: 999px; padding: 8px 14px; cursor: pointer; box-shadow: 0 2px 0 var(--line); }
+.tab[aria-selected="true"] { color: #fff; background: var(--accent); border-color: transparent; box-shadow: 0 3px 0 color-mix(in srgb, var(--accent) 55%, #000), 0 10px 20px -10px var(--accent); }
+.strip { display: flex; align-items: center; gap: 14px; flex-wrap: wrap; background: var(--card); border: 1px solid var(--line); border-radius: 14px; padding: 10px 14px; box-shadow: var(--shadow); }
+.lamp { width: 12px; height: 12px; border-radius: 50%; background: var(--muted); box-shadow: 0 0 0 3px color-mix(in srgb, var(--muted) 25%, transparent); flex: none; }
+.lamp.fresh { background: var(--go); box-shadow: 0 0 0 3px var(--go-glow), 0 0 18px var(--go-glow); }
+.lamp.stale { background: var(--stop); box-shadow: 0 0 0 3px var(--stop-glow), 0 0 18px var(--stop-glow); }
+.lamp.busy { background: var(--accent); animation: pulse 1.2s ease-in-out infinite; }
+@keyframes pulse { 0%,100% { box-shadow: 0 0 0 3px color-mix(in srgb, var(--accent) 30%, transparent); } 50% { box-shadow: 0 0 0 9px transparent; } }
+.strip .txt { font-size: 13px; color: var(--muted); min-width: 0; flex: 1 1 220px; }
+.strip .txt b { color: var(--fg); font-weight: 600; }
+button.btn { font: 600 14px var(--body); color: #fff; border: 0; border-radius: 10px; padding: 10px 16px; cursor: pointer;
+  background: linear-gradient(180deg, color-mix(in srgb, var(--accent) 85%, #fff), var(--accent));
+  box-shadow: 0 1px 0 rgba(255,255,255,.35) inset, 0 6px 0 color-mix(in srgb, var(--accent) 55%, #000), 0 12px 20px -10px var(--accent); transition: transform .08s, box-shadow .08s; }
+button.btn:active:not(:disabled) { transform: translateY(4px); box-shadow: 0 1px 0 rgba(255,255,255,.35) inset, 0 2px 0 color-mix(in srgb, var(--accent) 55%, #000), 0 6px 12px -8px var(--accent); }
+button.btn:disabled { opacity: .55; cursor: default; }
+button:focus-visible, .tab:focus-visible { outline: 2px solid var(--fg); outline-offset: 3px; }
+
+h2 { font: 600 13px var(--body); letter-spacing: .12em; text-transform: uppercase; color: var(--muted); margin: 0 0 10px; }
+.picks { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 16px; perspective: 1200px; }
+.tile { position: relative; border-radius: 18px; padding: 18px 20px 20px; min-width: 0; background: linear-gradient(160deg, var(--card-hi), var(--card)); border: 1px solid var(--line); box-shadow: var(--shadow); transform-style: preserve-3d; transition: transform .15s ease-out; }
+.tile::after { content: ""; position: absolute; inset: 0; border-radius: inherit; pointer-events: none; background: linear-gradient(120deg, var(--glass), transparent 45%); }
+.tile .eyebrow { font: 600 12px var(--body); letter-spacing: .1em; text-transform: uppercase; color: var(--muted); }
+.tile .big { font: 700 clamp(24px, 3.2vw, 32px)/1.1 var(--display); margin: 6px 0 10px; text-wrap: balance; }
+.tile.go { box-shadow: var(--shadow), 0 0 0 1px color-mix(in srgb, var(--go) 50%, transparent), 0 24px 60px -30px var(--go-glow); }
+.tile.stop { box-shadow: var(--shadow), 0 0 0 1px color-mix(in srgb, var(--stop) 50%, transparent), 0 24px 60px -30px var(--stop-glow); }
+.tile .num { position: absolute; right: 18px; top: 12px; font: 700 64px/1 var(--display); color: var(--line); transform: translateZ(-30px); }
+.tile p { margin: 8px 0 0; color: var(--muted); font-size: 14px; position: relative; }
+.legs { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; position: relative; }
+.leg { background: var(--bg2); border: 1px solid var(--line); border-radius: 12px; padding: 10px 12px; min-width: 0; box-shadow: 0 2px 6px rgba(0,0,0,.25) inset; }
+.leg .lab { font-size: 10px; letter-spacing: .1em; text-transform: uppercase; color: var(--muted); }
+.leg .t { font: 700 22px/1.1 var(--display); font-variant-numeric: tabular-nums; margin-top: 2px; }
+.leg .d { font-size: 12px; color: var(--muted); }
+.leg.stop .t { color: var(--stop); }
+
+.week { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 14px; perspective: 1400px; }
+.day { position: relative; min-width: 0; border-radius: 16px; padding: 14px 14px 16px; background: linear-gradient(170deg, var(--card-hi), var(--card)); border: 1px solid var(--line); box-shadow: var(--shadow); transform-style: preserve-3d; transition: transform .15s ease-out, box-shadow .2s; display: grid; gap: 10px; align-content: start; }
+.day::before { content: ""; position: absolute; left: 14px; right: 14px; top: 0; height: 3px; border-radius: 0 0 4px 4px; background: var(--line); }
+.day.go::before { background: var(--go); box-shadow: 0 0 14px var(--go-glow); }
+.day.stop::before { background: var(--stop); box-shadow: 0 0 14px var(--stop-glow); }
+.day.chosen { box-shadow: var(--shadow), 0 0 0 2px var(--accent), 0 24px 50px -28px var(--accent); }
+.day.past { opacity: .55; }
+.day-head { display: flex; justify-content: space-between; align-items: flex-start; gap: 8px; }
+.dow { font: 700 22px/1 var(--display); }
+.date { font-size: 12px; color: var(--muted); margin-top: 2px; }
+.pill { font: 600 11px var(--body); letter-spacing: .06em; text-transform: uppercase; white-space: nowrap; padding: 6px 10px; border-radius: 999px; color: var(--fg); background: var(--bg2); border: 1px solid var(--line); box-shadow: 0 2px 0 var(--line), 0 1px 0 rgba(255,255,255,.08) inset; transform: translateZ(14px); }
+.pill.go { color: #04150c; background: var(--go); border-color: transparent; box-shadow: 0 3px 0 color-mix(in srgb, var(--go) 60%, #000), 0 10px 20px -10px var(--go-glow); }
+.pill.stop { color: #fff; background: var(--stop); border-color: transparent; box-shadow: 0 3px 0 color-mix(in srgb, var(--stop) 60%, #000), 0 10px 20px -10px var(--stop-glow); }
+
+/* departure strips */
+.strips { display: grid; gap: 8px; transform: translateZ(6px); }
+.sl { display: grid; gap: 3px; }
+.sl .lab { font-size: 10px; letter-spacing: .08em; text-transform: uppercase; color: var(--muted); display: flex; justify-content: space-between; }
+.sl .bar { display: grid; gap: 2px; }
+.sl .s { height: 22px; border-radius: 4px; background: var(--line); position: relative; }
+.sl .s.go { background: var(--go); } .sl .s.stop { background: var(--stop); }
+.sl .s.none { background: var(--line); background-image: repeating-linear-gradient(135deg, transparent 0 3px, rgba(0,0,0,.18) 3px 6px); }
+.sl .s.ride { outline: 2px solid var(--fg); outline-offset: -2px; }
+.sl .s.ride::after { content: "🏍"; position: absolute; inset: 0; display: grid; place-items: center; font-size: 12px; }
+.sl .ticks { display: grid; font-size: 9px; color: var(--muted); font-variant-numeric: tabular-nums; }
+.sl .ticks span { text-align: left; }
+.why { font-size: 13px; color: var(--muted); margin: 0; }
+.why.go { color: var(--go); font-weight: 600; }
+.nsline { font-size: 12px; color: var(--muted); border-top: 1px solid var(--line); padding-top: 8px; }
+.nsline b { color: var(--fg); }
+
+details { background: var(--card); border: 1px solid var(--line); border-radius: 14px; padding: 12px 16px; box-shadow: var(--shadow); }
+summary { cursor: pointer; font-weight: 600; }
+details ul { margin: 8px 0 0; padding-left: 18px; color: var(--muted); }
+details p { color: var(--muted); margin: 8px 0 0; }
+.foot { color: var(--muted); font-size: 12px; margin: 0; }
+.legend { display: flex; gap: 14px; flex-wrap: wrap; font-size: 12px; color: var(--muted); align-items: center; }
+.legend i { display: inline-block; width: 14px; height: 10px; border-radius: 3px; vertical-align: -1px; margin-right: 5px; }
+.wps { font-size: 12px; color: var(--muted); }
+@media (prefers-reduced-motion: reduce) { .tile, .day { transition: none !important; transform: none !important; } .lamp.busy { animation: none; } }
+@media (max-width: 480px) { .tile .num { font-size: 48px; } .legs { grid-template-columns: 1fr; } }
+</style>
+
+<div class="wrap">
+  <header>
+    <div>
+      <h1>Office Week <span>Planner</span></h1>
+      <p class="route" id="routeLine"></p>
+    </div>
+    <div class="tabs" id="tabs" role="tablist"></div>
+  </header>
+  <div class="strip" id="strip">
+    <span class="lamp" id="lamp"></span>
+    <span class="txt" id="stripTxt">Loading forecast…</span>
+    <button class="btn" id="updateBtn" type="button" hidden>Update forecast now</button>
+  </div>
+
+  <section>
+    <h2>Recommended office days and leave times</h2>
+    <div class="picks" id="picks"></div>
+  </section>
+
+  <section>
+    <h2 id="weekTitle">Week</h2>
+    <div class="week" id="week"></div>
+    <p class="legend" style="margin:10px 0 0"><span><i style="background:var(--go)"></i>leave then: whole ride clean</span><span><i style="background:var(--stop)"></i>rain, wind or frost somewhere on the way</span><span><i style="background:var(--line)"></i>no forecast</span><span>🏍 recommended</span></p>
+  </section>
+
+  <details>
+    <summary>Rules, route scan and how the days are chosen</summary>
+    <ul id="rulesList"></ul>
+    <p id="wpLine" class="wps"></p>
+    <p>Two office days a week are required. The first two motorbike days of the remaining week are chosen; days already passed are skipped. If fewer than two qualify, the latest remaining days are kept as train days so a later update can still change them.</p>
+    <p>Forecast is refreshed Sunday, Tuesday and Thursday at 20:30, or with the button. Forecasts beyond two days ahead change often; the Tuesday and Thursday runs are there to catch that.</p>
+  </details>
+  <p class="foot" id="foot"></p>
+</div>
+
+<script>
+const TRIGGER_ID = "trig_01NDceito4UHsjzTbzVh7yJx";
+let CFG = null, DATA = null, ROUTE = null;
+
+// ---------- helpers ----------
+const pad = n => String(n).padStart(2, "0");
+const toMin = s => { const [h, m] = s.split(":").map(Number); return h * 60 + m; };
+const hhmm = m => pad(Math.floor(m / 60)) + ":" + pad(Math.round(m % 60));
+function todayISO() { const n = new Date(); return n.getFullYear() + "-" + pad(n.getMonth() + 1) + "-" + pad(n.getDate()); }
+function weekDays() {
+  // Mon–Fri of the current week; on Sat/Sun the coming week.
+  const n = new Date(); const dow = (n.getDay() + 6) % 7; // Mon=0
+  const mon = new Date(n); mon.setDate(n.getDate() - dow + (dow >= 5 ? 7 : 0));
+  const names = ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday"], keys = ["Mon", "Tue", "Wed", "Thu", "Fri"];
+  const months = ["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"];
+  return names.map((nm, i) => { const d = new Date(mon); d.setDate(mon.getDate() + i);
+    const iso = d.getFullYear() + "-" + pad(d.getMonth() + 1) + "-" + pad(d.getDate());
+    return { key: keys[i], name: nm, date: iso, label: nm + " " + d.getDate() + " " + months[d.getMonth()], short: d.getDate() + " " + months[d.getMonth()] }; });
+}
+const pkey = w => w.lat.toFixed(4) + "," + w.lon.toFixed(4);
+const has = x => x !== null && x !== undefined && x !== "";
+
+// value at a waypoint at minute-of-day t: the latest slot at or before t
+function valueAt(date, wp, t) {
+  const p = DATA && DATA.points && DATA.points[pkey(wp)]; const day = p && p[date];
+  if (!day) return null;
+  const keys = Object.keys(day).sort(); let best = null;
+  for (const k of keys) { if (toMin(k) <= t) best = k; else break; }
+  return best ? day[best] : null;
+}
+function slotStatus(v) {
+  if (!v) return { s: "none", fails: [] };
+  const R = CFG.rules, f = [];
+  if (has(v[0]) && v[0] > R.rainMaxMm) f.push("rain " + v[0] + " mm");
+  if (has(v[1]) && v[1] > R.windMaxKmh) f.push("wind " + v[1] + " km/h");
+  if (has(v[2]) && v[2] > R.gustMaxKmh) f.push("gusts " + v[2] + " km/h");
+  if (has(v[3]) && v[3] <= R.tempMinC) f.push(v[3] + " °C");
+  if (f.length) return { s: "stop", fails: f };
+  if (!has(v[0]) || !has(v[1]) || !has(v[3])) return { s: "none", fails: [] };
+  return { s: "go", fails: [] };
+}
+// moving scan: each waypoint at the time you pass it. dir "out" = home→office, "back" = office→home
+function rideStatus(date, start, dir) {
+  const wps = ROUTE.waypoints, total = ROUTE.rideMinutes; let unknown = false; const fails = [];
+  for (const w of wps) {
+    const t = start + (dir === "out" ? w.min : total - w.min);
+    const st = slotStatus(valueAt(date, w, t));
+    if (st.s === "stop") fails.push(w.name + " " + hhmm(t) + ": " + st.fails.join(", "));
+    else if (st.s === "none") unknown = true;
+  }
+  if (fails.length) return { s: "stop", fails };
+  if (unknown) return { s: "none", fails: [] };
+  return { s: "go", fails: [] };
+}
+function morningSlots() { const step = CFG.stepMinutes, out = []; const latest = toMin(CFG.arriveBy) - ROUTE.rideMinutes;
+  for (let t = Math.floor(latest / step) * step; t >= toMin(CFG.earliestLeaveHome); t -= step) out.push(t); return out; } // latest first
+function eveningSlots(morning) { const step = CFG.stepMinutes, out = []; const first = Math.ceil((morning + ROUTE.rideMinutes + CFG.shiftHours * 60) / step) * step;
+  for (let t = first; t <= toMin(CFG.latestLeaveOffice); t += step) out.push(t); return out; }
+
+function evalDay(d) {
+  if (d.date < todayISO()) return { s: "none", t: "Past", why: "" };
+  const dest = ROUTE.waypoints[ROUTE.waypoints.length - 1];
+  const destData = DATA && DATA.points && DATA.points[pkey(dest)] && DATA.points[pkey(dest)][d.date];
+  if (!destData) return { s: "none", t: "No forecast", why: "No forecast for " + dest.name + " on this day yet." };
+  let unknown = false, firstFail = null;
+  for (const m of morningSlots()) {
+    const ms = rideStatus(d.date, m, "out");
+    if (ms.s === "none") { unknown = true; continue; }
+    if (ms.s === "stop") { firstFail = firstFail || { leg: "Morning", at: m, fails: ms.fails }; continue; }
+    for (const r of eveningSlots(m)) {
+      const rs = rideStatus(d.date, r, "back");
+      if (rs.s === "go") return { s: "go", t: "Motorbike day", morning: m, evening: r, why: "Leave " + hhmm(m) + ", arrive " + hhmm(m + ROUTE.rideMinutes) + ". Leave office " + hhmm(r) + ", home " + hhmm(r + ROUTE.rideMinutes) + "." };
+      if (rs.s === "none") unknown = true; else firstFail = firstFail || { leg: "Evening", at: r, fails: rs.fails };
+    }
+  }
+  if (unknown && !firstFail) return { s: "none", t: "Check forecast", why: "Some slots have no forecast yet, so no verdict." };
+  const f = firstFail;
+  return { s: "stop", t: "Train day", why: f ? "No clean pair of rides. " + f.leg + " at " + hhmm(f.at) + ": " + f.fails[0] + (f.fails.length > 1 ? " (+" + (f.fails.length - 1) + ")" : "") + "." : "No clean pair of rides." };
+}
+function pick(days) {
+  const remaining = days.filter(d => d.date >= todayISO()).map(d => ({ d, ev: evalDay(d) }));
+  const chosen = remaining.filter(x => x.ev.s === "go").slice(0, 2).map(x => x.d);
+  const rest = remaining.filter(x => !chosen.includes(x.d)).map(x => x.d).reverse();
+  while (chosen.length < 2 && rest.length) chosen.push(rest.shift());
+  return chosen.sort((a, b) => days.indexOf(a) - days.indexOf(b));
+}
+
+// ---------- render ----------
+const esc = s => String(s || "").replace(/&/g, "&amp;").replace(/"/g, "&quot;").replace(/</g, "&lt;");
+function fmtDate(iso) { if (!iso) return ""; const d = new Date(iso); return isNaN(d) ? iso : d.toLocaleString("en-GB", { weekday: "short", day: "numeric", month: "short", hour: "2-digit", minute: "2-digit" }); }
+function renderStrip(state, text) { document.getElementById("lamp").className = "lamp " + state; document.getElementById("stripTxt").innerHTML = text; }
+function stripDefault() {
+  if (!DATA || !DATA.generated) return renderStrip("stale", "<b>Forecast not loaded.</b> Press update or wait for the next scheduled run (Sun / Tue / Thu 20:30).");
+  const age = (Date.now() - new Date(DATA.generated)) / 36e5;
+  renderStrip(age > 60 ? "stale" : "fresh", "<b>Forecast updated " + fmtDate(DATA.generated) + "</b> · " + esc(DATA.source) + (age > 60 ? " · more than 2 days old" : ""));
+}
+function strip(label, slots, statusFn, rideAt, tickEvery) {
+  const bar = slots.map(t => { const st = statusFn(t); return '<span class="s ' + st.s + (t === rideAt ? ' ride' : '') + '" title="' + hhmm(t) + (st.s === 'go' ? ': clean ride' : st.s === 'stop' ? ': ' + esc(st.fails.join('; ')) : ': no forecast') + '"></span>'; }).join("");
+  const ticks = slots.map(t => '<span>' + (t % tickEvery === 0 ? hhmm(t) : '') + '</span>').join("");
+  return '<div class="sl"><div class="lab"><span>' + label + '</span><span>' + hhmm(slots[0]) + '–' + hhmm(slots[slots.length - 1]) + '</span></div>' +
+    '<div class="bar" style="grid-template-columns:repeat(' + slots.length + ',1fr)">' + bar + '</div>' +
+    '<div class="ticks" style="grid-template-columns:repeat(' + slots.length + ',1fr)">' + ticks + '</div></div>';
+}
+function render() {
+  const days = weekDays();
+  document.getElementById("routeLine").innerHTML = "<b>" + esc(CFG.home.name) + "</b> ⇄ <b>" + esc(ROUTE.name) + "</b> · " + ROUTE.rideMinutes + " min via " + esc(ROUTE.via) + " · " + CFG.shiftHours + " h shift · at the office before " + CFG.arriveBy;
+  const tabs = document.getElementById("tabs"); tabs.innerHTML = "";
+  CFG.routes.forEach(r => { const b = document.createElement("button"); b.className = "tab"; b.type = "button"; b.setAttribute("role", "tab"); b.setAttribute("aria-selected", r.id === ROUTE.id); b.textContent = r.short; b.onclick = () => { ROUTE = r; try { localStorage.setItem("owp-route", r.id); } catch (e) {} render(); }; tabs.appendChild(b); });
+  const R = CFG.rules;
+  document.getElementById("rulesList").innerHTML =
+    "<li>Forecast every " + (DATA && DATA.stepMinutes ? DATA.stepMinutes : CFG.stepMinutes) + " minutes for each waypoint on the route; each waypoint is checked at the moment you pass it (moving scan), out and back.</li>" +
+    "<li>A slot is fit to ride when: " + R.rainMaxMm + " mm rain, wind " + R.windMaxKmh + " km/h or less, gusts " + R.gustMaxKmh + " km/h or less (when published), temperature above " + R.tempMinC + " °C.</li>" +
+    "<li>Morning: leave between " + CFG.earliestLeaveHome + " and the latest time that arrives before " + CFG.arriveBy + " (" + CFG.stepMinutes + "-min steps). The latest clean departure is recommended.</li>" +
+    "<li>Evening: earliest departure is arrival + " + CFG.shiftHours + " h; latest " + CFG.latestLeaveOffice + ". The earliest clean departure is recommended.</li>" +
+    "<li>Motorbike day: a clean morning ride and a matching clean evening ride. Otherwise train day.</li>";
+  document.getElementById("wpLine").textContent = "Scan points " + ROUTE.short + ": " + ROUTE.waypoints.map(w => w.name + " +" + w.min + " min").join(" → ");
+
+  const chosen = pick(days);
+  const picks = document.getElementById("picks"); picks.innerHTML = "";
+  if (days.every(d => evalDay(d).s === "none")) {
+    picks.innerHTML = '<div class="tile"><div class="eyebrow">Plan</div><div class="big">Waiting for forecast</div><p>Once the forecast is loaded for this route, the two best days appear here with the time to leave home and the time to leave the office.</p></div>';
+  } else chosen.forEach((d, i) => {
+    const ev = evalDay(d); const t = document.createElement("div");
+    t.className = "tile " + (ev.s === "go" ? "go" : ev.s === "stop" ? "stop" : "");
+    const normalM = morningSlots()[0], normalE = ev.s === "go" ? eveningSlots(ev.morning)[0] : null;
+    const legs = ev.s === "go"
+      ? '<div class="legs"><div class="leg"><div class="lab">Leave home</div><div class="t">' + hhmm(ev.morning) + '</div><div class="d">arrive ' + hhmm(ev.morning + ROUTE.rideMinutes) + '</div></div><div class="leg"><div class="lab">Leave office</div><div class="t">' + hhmm(ev.evening) + '</div><div class="d">home ' + hhmm(ev.evening + ROUTE.rideMinutes) + '</div></div></div>'
+      : ev.s === "stop" ? '<div class="legs"><div class="leg stop"><div class="lab">By train</div><div class="t">NS</div><div class="d">' + esc(ROUTE.ns) + '</div></div></div>' : '';
+    t.innerHTML = '<div class="num">' + (i + 1) + '</div><div class="eyebrow">Office day ' + (i + 1) + ' · ' + esc(ROUTE.short) + '</div><div class="big">' + d.label + ' <span class="pill ' + ev.s + '">' + ev.t + '</span></div>' + legs +
+      '<p>' + (ev.s === "go" ? (ev.morning === normalM ? "Normal start. " : "Leave " + (normalM - ev.morning) + " min earlier to stay dry. ") + (ev.evening === normalE ? "Straight after the shift." : "Leave the office " + (ev.evening - normalE) + " min later to stay dry.") : ev.why) + '</p>';
+    picks.appendChild(t);
+  });
+
+  document.getElementById("weekTitle").textContent = "Week of " + days[0].short + " – " + days[4].short + " · " + ROUTE.short;
+  const wk = document.getElementById("week"); wk.innerHTML = "";
+  const eveAll = (() => { const o = []; for (let t = 16 * 60; t <= toMin(CFG.latestLeaveOffice); t += CFG.stepMinutes) o.push(t); return o; })();
+  days.forEach(d => {
+    const ev = evalDay(d); const past = d.date < todayISO();
+    const mSlots = morningSlots().slice().reverse();
+    const box = document.createElement("div");
+    box.className = "day " + ev.s + (chosen.includes(d) ? " chosen" : "") + (past ? " past" : "");
+    box.innerHTML =
+      '<div class="day-head"><div><div class="dow">' + d.name + '</div><div class="date">' + d.short + (chosen.includes(d) ? " · office" : "") + '</div></div><span class="pill ' + ev.s + '">' + ev.t + '</span></div>' +
+      (past ? '' : '<div class="strips">' +
+        strip("Leave home", mSlots, t => rideStatus(d.date, t, "out"), ev.morning, 60) +
+        strip("Leave office", eveAll, t => rideStatus(d.date, t, "back"), ev.evening, 60) + '</div>') +
+      '<p class="why ' + ev.s + '">' + ev.why + '</p>' +
+      (ev.s === "stop" && !past ? '<div class="nsline"><b>NS:</b> ' + esc(ROUTE.ns) + '</div>' : '');
+    wk.appendChild(box);
+  });
+  document.getElementById("foot").textContent = (DATA && DATA.generated ? "Forecast " + fmtDate(DATA.generated) + ", " + DATA.source + ". " : "") + "Hover a block for the reason.";
+  attachTilt();
+}
+const fine = matchMedia("(pointer: fine)").matches && !matchMedia("(prefers-reduced-motion: reduce)").matches;
+function attachTilt() {
+  if (!fine) return;
+  document.querySelectorAll(".tile, .day").forEach(el => {
+    el.onpointermove = ev => { const r = el.getBoundingClientRect(); const x = (ev.clientX - r.left) / r.width - .5, y = (ev.clientY - r.top) / r.height - .5;
+      el.style.transform = "rotateX(" + (-y * 8).toFixed(2) + "deg) rotateY(" + (x * 10).toFixed(2) + "deg) translateZ(6px)"; };
+    el.onpointerleave = () => { el.style.transform = ""; };
+  });
+}
+
+// ---------- boot ----------
+async function loadJSON(path) { const r = await fetch(path, { cache: "no-store" }); if (!r.ok) throw new Error(path + " " + r.status); return r.json(); }
+(async () => {
+  try { CFG = await loadJSON("routes.json"); } catch (e) { renderStrip("stale", "<b>routes.json could not be loaded.</b> " + esc(e.message)); return; }
+  let saved = null; try { saved = localStorage.getItem("owp-route"); } catch (e) {}
+  ROUTE = CFG.routes.find(r => r.id === saved) || CFG.routes[0];
+  try { DATA = await loadJSON("data.json"); } catch (e) { DATA = null; }
+  render(); stripDefault();
+
+  const btn = document.getElementById("updateBtn");
+  const mcp = await claude.use("mcp");
+  if (!mcp) return;
+  btn.hidden = false;
+  btn.addEventListener("click", async () => {
+    btn.disabled = true; renderStrip("busy", "Starting the update…");
+    try {
+      await mcp.callTool("Claude Code Remote", "fire_trigger", { trigger_id: TRIGGER_ID, text: "Manual run from the page. Active route on the page: " + ROUTE.id + "." });
+      let secs = 0;
+      renderStrip("busy", "<b>Update running</b> since " + new Date().toLocaleTimeString("en-GB", { hour: "2-digit", minute: "2-digit" }) + ". It fetches 15-minute forecasts for every waypoint and republishes the data; usually 2–6 minutes. The page reloads by itself; the lamp turns green and the time changes.");
+      const timer = setInterval(() => { secs += 30;
+        if (secs >= 900) { clearInterval(timer); btn.disabled = false; renderStrip("stale", "<b>No new version after 15 minutes.</b> The update may have failed (laptop off?). Try again, or ask Claude to check the scheduled task."); return; }
+        renderStrip("busy", "<b>Update running</b> for " + Math.round(secs / 60) + " min. Waiting for the new version…"); }, 30000);
+    } catch (e) {
+      const c = e && e.code;
+      renderStrip("stale",
+        c === "needs_reauth" ? "Reconnect Claude Code Remote in claude.ai Settings → Connectors, then try again." :
+        c === "server_not_connected" ? "The update button only works for the owner, signed in on claude.ai." :
+        c === "not_in_manifest" || c === "approval_required" ? "The update was not allowed for this page. Allow it in the page's Permissions menu and try again." :
+        c === "tool_error" ? "The scheduled task could not be started: " + esc(e.message || "unknown error") :
+        "Could not start the update (" + (c || "unknown") + "). Try again in a moment.");
+      btn.disabled = false;
+    }
+  });
+})();
+</script>
