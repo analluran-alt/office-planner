@@ -18,6 +18,8 @@ jobs:
       - name: Build scan points along the real route (OSRM), only when routes changed
         run: python build_routes.py routes.json
       - name: Fetch Open-Meteo for all waypoints
+        id: fetch
+        continue-on-error: true
         run: python fetch_forecast.py routes.json data.json
       - name: Commit
         run: |
@@ -27,3 +29,6 @@ jobs:
           git commit -m "forecast $(date -u +%Y-%m-%dT%H:%MZ)" || echo "no change"
           git pull --rebase
           git push
+      - name: Fail the run if the forecast fetch failed
+        if: steps.fetch.outcome == 'failure'
+        run: exit 1

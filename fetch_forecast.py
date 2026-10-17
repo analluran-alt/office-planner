@@ -11,7 +11,7 @@ Output schema (data.json):
   "points": { "51.6978,5.3037": { "2026-10-19": { "06:00": [rain_mm, wind_kmh, gust_kmh, temp_c], ... } } }
 }
 """
-import json, sys, urllib.request, urllib.parse, datetime
+import json, sys, time, urllib.request, urllib.parse, datetime
 
 routes_path = sys.argv[1] if len(sys.argv) > 1 else "routes.json"
 out_path = sys.argv[2] if len(sys.argv) > 2 else "data.json"
@@ -22,16 +22,28 @@ for r in cfg["routes"]:
     for w in r["waypoints"]:
         points["%.4f,%.4f" % (w["lat"], w["lon"])] = (w["lat"], w["lon"])
 
-def fetch(lat, lon):
+def fetch_all(coords):
+    """One request for all points (Open-Meteo accepts comma-separated lists); 3 attempts."""
     q = {
-        "latitude": lat, "longitude": lon,
+        "latitude": ",".join("%.4f" % la for la, lo in coords),
+        "longitude": ",".join("%.4f" % lo for la, lo in coords),
         "minutely_15": "precipitation,temperature_2m,wind_speed_10m,wind_gusts_10m",
         "hourly": "precipitation,temperature_2m,wind_speed_10m,wind_gusts_10m",
         "forecast_days": 8, "timezone": "Europe/Amsterdam", "wind_speed_unit": "kmh",
     }
     url = "https://api.open-meteo.com/v1/forecast?" + urllib.parse.urlencode(q)
-    with urllib.request.urlopen(url, timeout=30) as f:
-        return json.load(f)
+    last = None
+    for attempt in range(3):
+        try:
+            req = urllib.request.Request(url, headers={"User-Agent": "office-planner/1.0 (github.com/analluran-alt/office-planner)"})
+            with urllib.request.urlopen(req, timeout=60) as f:
+                j = json.load(f)
+            return j if isinstance(j, list) else [j]
+        except Exception as e:
+            last = e
+            print("attempt", attempt + 1, "failed:", e, file=sys.stderr)
+            time.sleep(5 * (attempt + 1))
+    raise last
 
 def rnd(x, n=1):
     return None if x is None else round(x, n)
@@ -39,8 +51,11 @@ def rnd(x, n=1):
 data = {"generated": datetime.datetime.now().astimezone().isoformat(timespec="minutes"),
         "source": "Open-Meteo, 15-min where available, hourly beyond", "stepMinutes": 15, "points": {}}
 
-for key, (lat, lon) in points.items():
-    j = fetch(lat, lon)
+keys = list(points.keys())
+results = fetch_all([points[k] for k in keys])
+if len(results) != len(keys):
+    raise SystemExit("Open-Meteo returned %d results for %d points" % (len(results), len(keys)))
+for key, j in zip(keys, results):
     days = {}
     # hourly first (coarse), then 15-min overrides where present
     h = j.get("hourly", {})
