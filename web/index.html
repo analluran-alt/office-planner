@@ -1,5 +1,5 @@
 <meta name="claude:viewport-fit-sides" content="cover">
-<title>Office Week Planner</title>
+<title>R21 Officedays</title>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Chakra+Petch:wght@500;600;700&family=Manrope:wght@400;500;600;700&display=swap">
 <style>
 /* Layout: one screen. Compact header (route tabs + forecast lamp), a one-line week verdict, then the five days as a stacked deck of cards (active day on top, others peeking behind; tap/swipe/arrow to flip). Each card is one row: day + verdict | leave home | leave office | scan bars out/back | worst values. Tap a card to expand departure strips and the point table. Dark-first instrument panel. */
@@ -80,14 +80,16 @@ button:focus-visible, .tab:focus-visible, .day:focus-visible { outline: 2px soli
 /* day cards */
 /* deck: all cards share one grid cell; the active one is on top, the rest peek out behind it */
 .deckwrap { display: grid; gap: 10px; }
-.chips { display: flex; gap: 6px; flex-wrap: wrap; align-items: center; }
-.chip { font: 600 12px var(--body); color: var(--muted); background: var(--card); border: 1px solid var(--line); border-radius: 999px; padding: 6px 10px; cursor: pointer; display: inline-flex; align-items: center; gap: 6px; }
+.chips { display: grid; grid-template-columns: auto repeat(5, minmax(0, 1fr)) auto; gap: 4px; align-items: center; }
+.chip { font: 600 12px var(--body); color: var(--muted); background: var(--card); border: 1px solid var(--line); border-radius: 999px; padding: 7px 4px; cursor: pointer; display: inline-flex; align-items: center; justify-content: center; gap: 5px; min-width: 0; white-space: nowrap; overflow: hidden; }
 .chip i { width: 8px; height: 8px; border-radius: 50%; background: var(--line); display: inline-block; }
 .chip i.go { background: var(--go); } .chip i.stop { background: var(--stop); }
 .chip[aria-selected="true"] { color: var(--fg); border-color: var(--accent); box-shadow: 0 0 0 1px var(--accent); }
 .chip.nav { padding: 6px 10px; font-size: 14px; }
-.chips .hint { font-size: 11px; color: var(--muted); margin-left: auto; }
-.week { display: grid; grid-template-columns: 1fr; perspective: 1400px; padding-top: 22px; touch-action: pan-y; }
+.chip .dn { font-weight: 400; color: var(--muted); }
+@media (max-width: 480px) { .chip .dn { display: none; } }
+.chips .hint { grid-column: 1 / -1; font-size: 11px; color: var(--muted); }
+.week { display: grid; grid-template-columns: 1fr; perspective: 1400px; padding-top: 34px; touch-action: pan-y; }
 .day { grid-area: 1 / 1; position: relative; min-width: 0; border-radius: 14px; padding: 12px 14px; background: linear-gradient(170deg, var(--card-hi), var(--card)); border: 1px solid var(--line); box-shadow: var(--shadow); transform-style: preserve-3d; transition: transform .28s cubic-bezier(.2,.7,.2,1), opacity .28s, box-shadow .2s; display: grid; gap: 8px; cursor: pointer; transform-origin: 50% 0; }
 .day[data-pos="0"] { z-index: 5; }
 .day[data-pos="1"] { z-index: 4; transform: translateY(-9px) scale(.97); opacity: .85; pointer-events: none; }
@@ -95,6 +97,9 @@ button:focus-visible, .tab:focus-visible, .day:focus-visible { outline: 2px soli
 .day[data-pos="3"] { z-index: 2; transform: translateY(-24px) scale(.91); opacity: .4; pointer-events: none; }
 .day[data-pos="4"] { z-index: 1; transform: translateY(-30px) scale(.88); opacity: .25; pointer-events: none; }
 .day[data-pos]:not([data-pos="0"]) > * { visibility: hidden; }
+.day { align-self: start; }
+.day[data-pos]:not([data-pos="0"]) { height: 72px; overflow: hidden; }
+.day[data-pos]:not([data-pos="0"]) .detail { display: none !important; }
 .day.leaving { transform: translateY(40px) rotate(-2deg); opacity: 0; z-index: 6; pointer-events: none; }
 .row { display: grid; grid-template-columns: 150px 1fr 1fr minmax(140px, 1.2fr) minmax(170px, 1fr); gap: 12px; align-items: center; }
 @media (max-width: 900px) { .row { grid-template-columns: 1fr 1fr; } .row .head { grid-column: 1 / -1; } .row .scan { grid-column: 1 / -1; } .row .kv { grid-column: 1 / -1; } }
@@ -160,7 +165,7 @@ details p { color: var(--muted); margin: 8px 0 0; }
 <div class="wrap">
   <header>
     <div>
-      <h1>Office Week <span>Planner</span></h1>
+      <h1>R21 <span>Officedays</span></h1>
       <p class="sub" id="routeLine"></p>
     </div>
     <div class="tabs" id="tabs" role="tablist"></div>
@@ -184,7 +189,7 @@ details p { color: var(--muted); margin: 8px 0 0; }
 </div>
 
 <script>
-const TRIGGER_ID = "trig_01NDceito4UHsjzTbzVh7yJx";
+const TRIGGER_ID = "trig_014W59A2C6UPJwe7DZNsBDBY";
 let CFG = null, DATA = null, ROUTE = null; const OPEN = new Set(); let TOP = null;
 
 const pad = n => String(n).padStart(2, "0");
@@ -222,7 +227,8 @@ function slotStatus(v) {
 // per-waypoint scan for a ride; dir "out" = home→office, "back" = office→home
 function scan(date, start, dir) {
   const total = ROUTE.rideMinutes;
-  return ROUTE.waypoints.map(w => { const t = start + (dir === "out" ? w.min : total - w.min); const v = valueAt(date, w, t); return { w, t, v, st: slotStatus(v) }; });
+  const list = ROUTE.waypoints.map(w => { const t = start + (dir === "out" ? w.min : total - w.min); const v = valueAt(date, w, t); return { w, t, v, st: slotStatus(v) }; });
+  return dir === "back" ? list.reverse() : list; // evening: destination → home, in the order you pass them
 }
 function rideStatus(date, start, dir) {
   const sc = scan(date, start, dir); const fails = sc.filter(x => x.st.s === "stop").map(x => x.w.name + " " + hhmm(x.t) + ": " + x.st.fails.join(", "));
@@ -308,7 +314,7 @@ function render() {
   const chips = document.getElementById("chips"); chips.innerHTML = "";
   const nav = (txt, delta, title) => { const b = document.createElement("button"); b.className = "chip nav"; b.type = "button"; b.title = title; b.textContent = txt; b.onclick = () => flip(days, delta); chips.appendChild(b); };
   nav("‹", -1, "Previous day");
-  days.forEach((d, i) => { const b = document.createElement("button"); b.className = "chip"; b.type = "button"; b.setAttribute("aria-selected", i === topIdx); b.innerHTML = '<i class="' + evs[i].s + '"></i>' + d.name.slice(0, 3) + (chosen.includes(d) ? ' ★' : ''); b.onclick = () => { TOP = d.date; render(); }; chips.appendChild(b); });
+  days.forEach((d, i) => { const b = document.createElement("button"); b.className = "chip"; b.type = "button"; b.setAttribute("aria-selected", i === topIdx); b.innerHTML = '<i class="' + evs[i].s + '"></i>' + d.name.slice(0, 3) + ' <span class="dn">' + d.short.split(' ')[0] + '</span>' + (chosen.includes(d) ? ' ★' : ''); b.onclick = () => { TOP = d.date; OPEN.clear(); render(); }; chips.appendChild(b); });
   nav("›", 1, "Next day");
   const hint = document.createElement("span"); hint.className = "hint"; hint.textContent = "Tap a card to flip to the next day · ★ office day"; chips.appendChild(hint);
   const wk = document.getElementById("week"); wk.innerHTML = "";
@@ -343,12 +349,12 @@ function render() {
         '<div class="detail">' +
           stripHTML("Leave home", morningSlots().slice().reverse(), t => rideStatus(d.date, t, "out"), ev.morning) +
           stripHTML("Leave office", eveAll, t => rideStatus(d.date, t, "back"), ev.evening) +
-          '<table class="wpt"><tbody><tr><td colspan="6" style="color:var(--muted);border:0">Morning ride ' + hhmm(m) + '</td></tr>' + scan(d.date, m, "out").map(x => '<tr class="' + x.st.s + '"><td>' + esc(x.w.name) + '</td><td>' + hhmm(x.t) + '</td><td>' + fmtV(x.v, 0) + '</td><td>' + fmtV(x.v, 1) + '</td><td>' + fmtV(x.v, 2) + '</td><td>' + fmtV(x.v, 3) + '</td></tr>').join("") +
-          '<tr><td colspan="6" style="color:var(--muted)">Evening ride ' + hhmm(eAt) + '</td></tr>' + scan(d.date, eAt, "back").map(x => '<tr class="' + x.st.s + '"><td>' + esc(x.w.name) + '</td><td>' + hhmm(x.t) + '</td><td>' + fmtV(x.v, 0) + '</td><td>' + fmtV(x.v, 1) + '</td><td>' + fmtV(x.v, 2) + '</td><td>' + fmtV(x.v, 3) + '</td></tr>').join("") + '</tbody></table>' +
+          '<table class="wpt"><tbody><tr><td colspan="6" style="color:var(--muted);border:0">Morning ride ' + hhmm(m) + ' · ' + esc(ROUTE.waypoints[0].name) + ' → ' + esc(ROUTE.waypoints[ROUTE.waypoints.length - 1].name) + '</td></tr>' + scan(d.date, m, "out").map(x => '<tr class="' + x.st.s + '"><td>' + esc(x.w.name) + '</td><td>' + hhmm(x.t) + '</td><td>' + fmtV(x.v, 0) + '</td><td>' + fmtV(x.v, 1) + '</td><td>' + fmtV(x.v, 2) + '</td><td>' + fmtV(x.v, 3) + '</td></tr>').join("") +
+          '<tr><td colspan="6" style="color:var(--muted)">Evening ride ' + hhmm(eAt) + ' · ' + esc(ROUTE.waypoints[ROUTE.waypoints.length - 1].name) + ' → ' + esc(ROUTE.waypoints[0].name) + '</td></tr>' + scan(d.date, eAt, "back").map(x => '<tr class="' + x.st.s + '"><td>' + esc(x.w.name) + '</td><td>' + hhmm(x.t) + '</td><td>' + fmtV(x.v, 0) + '</td><td>' + fmtV(x.v, 1) + '</td><td>' + fmtV(x.v, 2) + '</td><td>' + fmtV(x.v, 3) + '</td></tr>').join("") + '</tbody></table>' +
         '</div>');
     box.addEventListener("click", ev2 => {
       if (ev2.target.closest(".detail")) return;
-      if (ev2.target.closest(".more")) { OPEN.has(d.date) ? OPEN.delete(d.date) : OPEN.add(d.date); render(); return; }
+      if (ev2.target.closest(".more")) { const was = OPEN.has(d.date); OPEN.clear(); if (!was) OPEN.add(d.date); render(); return; }
       flip(days, 1);
     });
     box.addEventListener("keydown", ev2 => { if (ev2.key === "ArrowRight" || ev2.key === " " || ev2.key === "Enter") { ev2.preventDefault(); flip(days, 1); } if (ev2.key === "ArrowLeft") { ev2.preventDefault(); flip(days, -1); } });
@@ -358,7 +364,7 @@ function render() {
   attachTilt();
 }
 function flip(days, delta) {
-  const i = days.findIndex(d => d.date === TOP); const n = (i + delta + days.length) % days.length;
+  const i = days.findIndex(d => d.date === TOP); const n = (i + delta + days.length) % days.length; OPEN.clear();
   const topEl = document.querySelector('.day[data-pos="0"]');
   if (topEl && delta > 0 && !matchMedia("(prefers-reduced-motion: reduce)").matches) { topEl.classList.add("leaving"); setTimeout(() => { TOP = days[n].date; render(); }, 180); }
   else { TOP = days[n].date; render(); }

@@ -1,4 +1,4 @@
-# Office Week Planner — project instructions
+# R21 Officedays — project instructions
 
 ## Purpose
 Decide each week which two days the user rides his motorbike (Honda CB600 Hornet) to the office from
@@ -31,8 +31,10 @@ Two office days a week are mandatory; the user is free to choose which.
   fetch_forecast.py every 3 hours and commits data.json (Open-Meteo, 15-minute resolution, free, no key).
   Raw data: https://raw.githubusercontent.com/analluran-alt/office-planner/main/data.json
   Manual run: Actions → Fetch forecast → Run workflow.
-- Claude scheduled task "Office planner: publish forecast": Sunday, Tuesday and Thursday 20:30
-  (Europe/Amsterdam). Downloads data.json from GitHub, publishes it to the artifact, reports the plan per route.
+- Claude scheduled task "R21 Officedays: publish forecast" (trig_014W59A2C6UPJwe7DZNsBDBY): Sunday, Tuesday and
+  Thursday 20:30 (Europe/Amsterdam), push + e-mail notification. Downloads routes.json and data.json from GitHub,
+  computes the plan, compares it with the previous plan.json, publishes all three to the artifact, and reports
+  with a headline: PLAN CHANGED / NEW WEEK / No change.
 - Local project folder on the laptop "r21": C:\Users\anall\OneDrive\Documents\__R21\_R21 Weekplanner
   (copy of the repo files; edit routes.json here and ask Claude to push it).
 - NS fallback (checked on ns.nl 17 Oct 2026): 's-Hertogenbosch 08:20 → Utrecht Centraal 08:46,

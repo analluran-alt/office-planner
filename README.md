@@ -1,4 +1,4 @@
-# Office Week Planner
+# R21 Officedays
 
 Picks the two office days per week for a motorbike commute from 's-Hertogenbosch, by scanning the
 forecast along the route at the time each point is passed (moving scan). Wet, windy or freezing
