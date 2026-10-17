@@ -1,6 +1,15 @@
 {
-  "home": { "name": "'s-Hertogenbosch", "lat": 51.6978, "lon": 5.3037 },
-  "rules": { "rainMaxMm": 0, "windMaxKmh": 25, "gustMaxKmh": 40, "tempMinC": 0 },
+  "home": {
+    "name": "'s-Hertogenbosch",
+    "lat": 51.6978,
+    "lon": 5.3037
+  },
+  "rules": {
+    "rainMaxMm": 0,
+    "windMaxKmh": 25,
+    "gustMaxKmh": 40,
+    "tempMinC": 0
+  },
   "shiftHours": 8.5,
   "arriveBy": "09:15",
   "earliestLeaveHome": "06:00",
@@ -15,13 +24,44 @@
       "via": "A2 · A27 · A28",
       "ns": "dep 08:20 's-Hertogenbosch (Intercity) → Utrecht Centraal 08:46, change 5 min → Sprinter 08:51 → Amersfoort Vathorst 09:19. Earlier: 07:50 → 08:49. Checked on ns.nl 17 Oct 2026.",
       "waypoints": [
-        { "name": "'s-Hertogenbosch", "lat": 51.6978, "lon": 5.3037, "min": 0 },
-        { "name": "Zaltbommel", "lat": 51.8100, "lon": 5.2450, "min": 15 },
-        { "name": "Culemborg", "lat": 51.9550, "lon": 5.2280, "min": 30 },
-        { "name": "Utrecht", "lat": 52.0700, "lon": 5.1200, "min": 45 },
-        { "name": "Zeist / Den Dolder", "lat": 52.1150, "lon": 5.2500, "min": 60 },
-        { "name": "Amersfoort Vathorst", "lat": 52.1930, "lon": 5.4250, "min": 75 }
-      ]
+        {
+          "name": "'s-Hertogenbosch",
+          "lat": 51.6978,
+          "lon": 5.3037,
+          "min": 0
+        },
+        {
+          "name": "Zaltbommel",
+          "lat": 51.81,
+          "lon": 5.245,
+          "min": 15
+        },
+        {
+          "name": "Culemborg",
+          "lat": 51.955,
+          "lon": 5.228,
+          "min": 30
+        },
+        {
+          "name": "Utrecht",
+          "lat": 52.07,
+          "lon": 5.12,
+          "min": 45
+        },
+        {
+          "name": "Zeist / Den Dolder",
+          "lat": 52.115,
+          "lon": 5.25,
+          "min": 60
+        },
+        {
+          "name": "Amersfoort Vathorst",
+          "lat": 52.193,
+          "lon": 5.425,
+          "min": 75
+        }
+      ],
+      "nsShort": "NS 08:20→09:19"
     },
     {
       "id": "eindhoven",
@@ -31,12 +71,38 @@
       "via": "A2",
       "ns": "Intercity 's-Hertogenbosch → Eindhoven Centraal, every 15 min, about 20 min. Check ns.nl.",
       "waypoints": [
-        { "name": "'s-Hertogenbosch", "lat": 51.6978, "lon": 5.3037, "min": 0 },
-        { "name": "Vught", "lat": 51.6550, "lon": 5.2900, "min": 10 },
-        { "name": "Boxtel", "lat": 51.5900, "lon": 5.3300, "min": 20 },
-        { "name": "Best", "lat": 51.5080, "lon": 5.3980, "min": 30 },
-        { "name": "Eindhoven", "lat": 51.4416, "lon": 5.4697, "min": 40 }
-      ]
+        {
+          "name": "'s-Hertogenbosch",
+          "lat": 51.6978,
+          "lon": 5.3037,
+          "min": 0
+        },
+        {
+          "name": "Vught",
+          "lat": 51.655,
+          "lon": 5.29,
+          "min": 10
+        },
+        {
+          "name": "Boxtel",
+          "lat": 51.59,
+          "lon": 5.33,
+          "min": 20
+        },
+        {
+          "name": "Best",
+          "lat": 51.508,
+          "lon": 5.398,
+          "min": 30
+        },
+        {
+          "name": "Eindhoven",
+          "lat": 51.4416,
+          "lon": 5.4697,
+          "min": 40
+        }
+      ],
+      "nsShort": "NS IC ~20 min"
     }
   ]
 }
