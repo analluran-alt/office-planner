@@ -25,40 +25,58 @@
       "ns": "dep 08:20 's-Hertogenbosch (Intercity) → Utrecht Centraal 08:46, change 5 min → Sprinter 08:51 → Amersfoort Vathorst 09:19. Earlier: 07:50 → 08:49. Checked on ns.nl 17 Oct 2026.",
       "waypoints": [
         {
-          "name": "'s-Hertogenbosch",
           "lat": 51.6978,
           "lon": 5.3037,
-          "min": 0
+          "min": 0,
+          "name": "'s-Hertogenbosch"
         },
         {
-          "name": "Zaltbommel",
-          "lat": 51.81,
-          "lon": 5.245,
-          "min": 15
+          "lat": 51.7487,
+          "lon": 5.2937,
+          "min": 10,
+          "name": "Hoenzadriel"
         },
         {
-          "name": "Culemborg",
-          "lat": 51.955,
-          "lon": 5.228,
-          "min": 30
+          "lat": 51.8443,
+          "lon": 5.2408,
+          "min": 20,
+          "name": "Waardenburg"
         },
         {
-          "name": "Utrecht",
-          "lat": 52.07,
-          "lon": 5.12,
-          "min": 45
+          "lat": 51.9359,
+          "lon": 5.1573,
+          "min": 30,
+          "name": "Culemborg"
         },
         {
-          "name": "Zeist / Den Dolder",
-          "lat": 52.115,
-          "lon": 5.25,
-          "min": 60
+          "lat": 52.0263,
+          "lon": 5.1318,
+          "min": 40,
+          "name": "Houten"
         },
         {
-          "name": "Amersfoort Vathorst",
+          "lat": 52.1014,
+          "lon": 5.2146,
+          "min": 50,
+          "name": "Zeist"
+        },
+        {
+          "lat": 52.1301,
+          "lon": 5.3732,
+          "min": 60,
+          "name": "Leusden"
+        },
+        {
+          "lat": 52.1925,
+          "lon": 5.411,
+          "min": 70,
+          "name": "Amersfoort"
+        },
+        {
           "lat": 52.193,
-          "lon": 5.425,
-          "min": 75
+          "lon": 5.4251,
+          "min": 75,
+          "name": "Amersfoort Vathorst"
         }
       ],
       "nsShort": "NS 08:20→09:19",
@@ -73,7 +91,14 @@
         "lat": 52.193,
         "lon": 5.425
       },
-      "scanEveryMin": 10
+      "scanEveryMin": 10,
+      "fingerprint": "de618d2a4996",
+      "rebuild": false,
+      "osrm": {
+        "durationMin": 65,
+        "distanceKm": 79.0,
+        "generated": "2026-10-17T21:17+00:00"
+      }
     },
     {
       "id": "eindhoven",
@@ -84,34 +109,34 @@
       "ns": "Intercity 's-Hertogenbosch → Eindhoven Centraal, every 15 min, about 20 min. Check ns.nl.",
       "waypoints": [
         {
-          "name": "'s-Hertogenbosch",
           "lat": 51.6978,
           "lon": 5.3037,
-          "min": 0
+          "min": 0,
+          "name": "'s-Hertogenbosch"
         },
         {
-          "name": "Vught",
-          "lat": 51.655,
-          "lon": 5.29,
-          "min": 10
+          "lat": 51.6425,
+          "lon": 5.3099,
+          "min": 10,
+          "name": "Vught"
         },
         {
-          "name": "Boxtel",
-          "lat": 51.59,
-          "lon": 5.33,
-          "min": 20
+          "lat": 51.553,
+          "lon": 5.3633,
+          "min": 20,
+          "name": "Liempde"
         },
         {
-          "name": "Best",
-          "lat": 51.508,
-          "lon": 5.398,
-          "min": 30
+          "lat": 51.4801,
+          "lon": 5.4361,
+          "min": 30,
+          "name": "Eindhoven"
         },
         {
-          "name": "Eindhoven",
           "lat": 51.4416,
           "lon": 5.4697,
-          "min": 40
+          "min": 40,
+          "name": "Eindhoven"
         }
       ],
       "nsShort": "NS IC ~20 min",
@@ -126,7 +151,14 @@
         "lat": 51.4416,
         "lon": 5.4697
       },
-      "scanEveryMin": 10
+      "scanEveryMin": 10,
+      "fingerprint": "62ae6f48f89e",
+      "rebuild": false,
+      "osrm": {
+        "durationMin": 33,
+        "distanceKm": 32.8,
+        "generated": "2026-10-17T21:17+00:00"
+      }
     }
   ]
 }
