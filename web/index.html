@@ -2,7 +2,7 @@
 <title>Office Week Planner</title>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Chakra+Petch:wght@500;600;700&family=Manrope:wght@400;500;600;700&display=swap">
 <style>
-/* Layout: one screen. Compact header (route tabs + forecast lamp), a one-line week verdict, then the five days as a vertical deck of cards. Each card is one row: day + verdict | leave home | leave office | scan bars out/back | worst values. Tap a card to expand departure strips and the point table. Dark-first instrument panel. */
+/* Layout: one screen. Compact header (route tabs + forecast lamp), a one-line week verdict, then the five days as a stacked deck of cards (active day on top, others peeking behind; tap/swipe/arrow to flip). Each card is one row: day + verdict | leave home | leave office | scan bars out/back | worst values. Tap a card to expand departure strips and the point table. Dark-first instrument panel. */
 :root {
   --bg: #0e1116; --bg2: #151a22; --fg: #eef1f5; --muted: #8e97a6;
   --card: #1a2029; --card-hi: #232b37; --line: #2b3441; --glass: rgba(255,255,255,.05);
@@ -78,8 +78,24 @@ button:focus-visible, .tab:focus-visible, .day:focus-visible { outline: 2px soli
 .verdict .n { color: var(--muted); font-size: 12px; }
 
 /* day cards */
-.week { display: grid; grid-template-columns: 1fr; gap: 10px; perspective: 1400px; }
-.day { position: relative; min-width: 0; border-radius: 14px; padding: 12px 14px; background: linear-gradient(170deg, var(--card-hi), var(--card)); border: 1px solid var(--line); box-shadow: var(--shadow); transform-style: preserve-3d; transition: transform .15s ease-out, box-shadow .2s; display: grid; gap: 8px; cursor: pointer; }
+/* deck: all cards share one grid cell; the active one is on top, the rest peek out behind it */
+.deckwrap { display: grid; gap: 10px; }
+.chips { display: flex; gap: 6px; flex-wrap: wrap; align-items: center; }
+.chip { font: 600 12px var(--body); color: var(--muted); background: var(--card); border: 1px solid var(--line); border-radius: 999px; padding: 6px 10px; cursor: pointer; display: inline-flex; align-items: center; gap: 6px; }
+.chip i { width: 8px; height: 8px; border-radius: 50%; background: var(--line); display: inline-block; }
+.chip i.go { background: var(--go); } .chip i.stop { background: var(--stop); }
+.chip[aria-selected="true"] { color: var(--fg); border-color: var(--accent); box-shadow: 0 0 0 1px var(--accent); }
+.chip.nav { padding: 6px 10px; font-size: 14px; }
+.chips .hint { font-size: 11px; color: var(--muted); margin-left: auto; }
+.week { display: grid; grid-template-columns: 1fr; perspective: 1400px; padding-top: 22px; touch-action: pan-y; }
+.day { grid-area: 1 / 1; position: relative; min-width: 0; border-radius: 14px; padding: 12px 14px; background: linear-gradient(170deg, var(--card-hi), var(--card)); border: 1px solid var(--line); box-shadow: var(--shadow); transform-style: preserve-3d; transition: transform .28s cubic-bezier(.2,.7,.2,1), opacity .28s, box-shadow .2s; display: grid; gap: 8px; cursor: pointer; transform-origin: 50% 0; }
+.day[data-pos="0"] { z-index: 5; }
+.day[data-pos="1"] { z-index: 4; transform: translateY(-9px) scale(.97); opacity: .85; pointer-events: none; }
+.day[data-pos="2"] { z-index: 3; transform: translateY(-17px) scale(.94); opacity: .6; pointer-events: none; }
+.day[data-pos="3"] { z-index: 2; transform: translateY(-24px) scale(.91); opacity: .4; pointer-events: none; }
+.day[data-pos="4"] { z-index: 1; transform: translateY(-30px) scale(.88); opacity: .25; pointer-events: none; }
+.day[data-pos]:not([data-pos="0"]) > * { visibility: hidden; }
+.day.leaving { transform: translateY(40px) rotate(-2deg); opacity: 0; z-index: 6; pointer-events: none; }
 .row { display: grid; grid-template-columns: 150px 1fr 1fr minmax(140px, 1.2fr) minmax(170px, 1fr); gap: 12px; align-items: center; }
 @media (max-width: 900px) { .row { grid-template-columns: 1fr 1fr; } .row .head { grid-column: 1 / -1; } .row .scan { grid-column: 1 / -1; } .row .kv { grid-column: 1 / -1; } }
 .scan { display: grid; gap: 4px; min-width: 0; }
@@ -156,7 +172,7 @@ details p { color: var(--muted); margin: 8px 0 0; }
   </header>
 
   <div class="verdict" id="verdict"></div>
-  <div class="week" id="week"></div>
+  <div class="deckwrap"><div class="chips" id="chips"></div><div class="week" id="week"></div></div>
 
   <details>
     <summary>Rules, scan points and how days are chosen</summary>
@@ -169,7 +185,7 @@ details p { color: var(--muted); margin: 8px 0 0; }
 
 <script>
 const TRIGGER_ID = "trig_01NDceito4UHsjzTbzVh7yJx";
-let CFG = null, DATA = null, ROUTE = null; const OPEN = new Set();
+let CFG = null, DATA = null, ROUTE = null; const OPEN = new Set(); let TOP = null;
 
 const pad = n => String(n).padStart(2, "0");
 const toMin = s => { const [h, m] = s.split(":").map(Number); return h * 60 + m; };
@@ -286,6 +302,15 @@ function render() {
   if (evs.every(e => e.s === "none")) v.innerHTML = '<span class="big">Waiting for forecast</span>';
   else v.innerHTML = '<span class="big">Office days: <em>' + chosen.map(d => d.name).join(" &amp; ") + '</em></span><span class="n">' + goDays.length + ' of ' + days.filter(d => d.date >= todayISO()).length + ' remaining days rideable · ' + esc(ROUTE.short) + '</span>';
 
+  // which card is on top: saved choice, else today (or the first chosen day)
+  if (!TOP || !days.some(d => d.date === TOP)) { const t = days.find(d => d.date === todayISO()) || chosen[0] || days[0]; TOP = t.date; }
+  const topIdx = days.findIndex(d => d.date === TOP);
+  const chips = document.getElementById("chips"); chips.innerHTML = "";
+  const nav = (txt, delta, title) => { const b = document.createElement("button"); b.className = "chip nav"; b.type = "button"; b.title = title; b.textContent = txt; b.onclick = () => flip(days, delta); chips.appendChild(b); };
+  nav("‹", -1, "Previous day");
+  days.forEach((d, i) => { const b = document.createElement("button"); b.className = "chip"; b.type = "button"; b.setAttribute("aria-selected", i === topIdx); b.innerHTML = '<i class="' + evs[i].s + '"></i>' + d.name.slice(0, 3) + (chosen.includes(d) ? ' ★' : ''); b.onclick = () => { TOP = d.date; render(); }; chips.appendChild(b); });
+  nav("›", 1, "Next day");
+  const hint = document.createElement("span"); hint.className = "hint"; hint.textContent = "Tap a card to flip to the next day · ★ office day"; chips.appendChild(hint);
   const wk = document.getElementById("week"); wk.innerHTML = "";
   const eveAll = (() => { const o = []; for (let t = 16 * 60; t <= toMin(CFG.latestLeaveOffice); t += CFG.stepMinutes) o.push(t); return o; })();
   days.forEach((d, idx) => {
@@ -297,7 +322,8 @@ function render() {
     
     const box = document.createElement("div");
     box.className = "day " + ev.s + (isChosen ? " chosen" : "") + (past ? " past" : "") + (OPEN.has(d.date) ? " open" : "");
-    box.tabIndex = 0;
+    box.dataset.pos = String((idx - topIdx + days.length) % days.length);
+    box.tabIndex = idx === topIdx ? 0 : -1;
     const mSt = past ? null : rideStatus(d.date, m, "out");
     const eAt = e !== null ? e : normalE, eSt = past ? null : rideStatus(d.date, eAt, "back");
     const tile = (lab, t, st, shifted, sub) => '<div class="tm' + (st && st.s === "stop" ? ' bad' : shifted ? ' shift' : '') + '"><div class="lab">' + lab + '</div><div class="t">' + hhmm(t) + (st ? '<small>' + (st.s === "go" ? "clean" : st.s === "stop" ? "blocked" : "no data") + '</small>' : '') + '</div><div class="d">' + sub + '</div></div>';
@@ -320,13 +346,26 @@ function render() {
           '<table class="wpt"><tbody><tr><td colspan="6" style="color:var(--muted);border:0">Morning ride ' + hhmm(m) + '</td></tr>' + scan(d.date, m, "out").map(x => '<tr class="' + x.st.s + '"><td>' + esc(x.w.name) + '</td><td>' + hhmm(x.t) + '</td><td>' + fmtV(x.v, 0) + '</td><td>' + fmtV(x.v, 1) + '</td><td>' + fmtV(x.v, 2) + '</td><td>' + fmtV(x.v, 3) + '</td></tr>').join("") +
           '<tr><td colspan="6" style="color:var(--muted)">Evening ride ' + hhmm(eAt) + '</td></tr>' + scan(d.date, eAt, "back").map(x => '<tr class="' + x.st.s + '"><td>' + esc(x.w.name) + '</td><td>' + hhmm(x.t) + '</td><td>' + fmtV(x.v, 0) + '</td><td>' + fmtV(x.v, 1) + '</td><td>' + fmtV(x.v, 2) + '</td><td>' + fmtV(x.v, 3) + '</td></tr>').join("") + '</tbody></table>' +
         '</div>');
-    box.addEventListener("click", ev2 => { if (ev2.target.closest(".detail")) return; OPEN.has(d.date) ? OPEN.delete(d.date) : OPEN.add(d.date); render(); });
-    box.addEventListener("keydown", ev2 => { if (ev2.key === "Enter" || ev2.key === " ") { ev2.preventDefault(); box.click(); } });
+    box.addEventListener("click", ev2 => {
+      if (ev2.target.closest(".detail")) return;
+      if (ev2.target.closest(".more")) { OPEN.has(d.date) ? OPEN.delete(d.date) : OPEN.add(d.date); render(); return; }
+      flip(days, 1);
+    });
+    box.addEventListener("keydown", ev2 => { if (ev2.key === "ArrowRight" || ev2.key === " " || ev2.key === "Enter") { ev2.preventDefault(); flip(days, 1); } if (ev2.key === "ArrowLeft") { ev2.preventDefault(); flip(days, -1); } });
     wk.appendChild(box);
   });
-  document.getElementById("foot").textContent = "Each card: both rides at the recommended time (train days: the normal times, so you see what blocks them). Bars: scan points in route order, out and back. Worst values along both rides. Tap a card for all departure options.";
+  document.getElementById("foot").textContent = "One card per day, stacked; the day on top is the one you chose (default: today or the first office day). Tap the card, swipe, use the arrows or the day chips to flip. Each card shows both rides at the recommended times (train days: the normal times, so you see what blocks them), scan points out and back, and the worst values along the way.";
   attachTilt();
 }
+function flip(days, delta) {
+  const i = days.findIndex(d => d.date === TOP); const n = (i + delta + days.length) % days.length;
+  const topEl = document.querySelector('.day[data-pos="0"]');
+  if (topEl && delta > 0 && !matchMedia("(prefers-reduced-motion: reduce)").matches) { topEl.classList.add("leaving"); setTimeout(() => { TOP = days[n].date; render(); }, 180); }
+  else { TOP = days[n].date; render(); }
+}
+let swipeX = null;
+document.addEventListener("pointerdown", e => { if (e.target.closest(".week")) swipeX = e.clientX; });
+document.addEventListener("pointerup", e => { if (swipeX === null) return; const dx = e.clientX - swipeX; swipeX = null; if (Math.abs(dx) > 60 && CFG) flip(weekDays(), dx < 0 ? 1 : -1); });
 const fine = matchMedia("(pointer: fine)").matches && !matchMedia("(prefers-reduced-motion: reduce)").matches;
 function attachTilt() {
   if (!fine) return;
